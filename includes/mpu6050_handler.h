@@ -7,6 +7,4 @@
 #include "mpu6050.h"
 
 
-void create_sensor_tasks(QueueHandle_t sensorQueue);
-
 #endif // SENSOR_HANDLER_H
