@@ -4,7 +4,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
-#include "mpu6050.h"
+#include "mpu6050.hpp"
 
 
 #endif // SENSOR_HANDLER_H

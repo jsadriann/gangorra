@@ -14,11 +14,11 @@ int main() {
     gpio_pull_up(4);
     gpio_pull_up(5);
 
-    mpu6050_init();
+    //mpu6050_init();
 
     sensorDataQueue = xQueueCreate(10, sizeof(int16_t) * 6);
 
-    create_sensor_tasks(sensorDataQueue);
+    //create_sensor_tasks(sensorDataQueue);
 
     vTaskStartScheduler();
 
