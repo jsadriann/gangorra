@@ -77,7 +77,6 @@ int main() {
     return 0;
 
 }
-
 // Implementação da Tarefa 1
 void TaskUpdate(void *pvParameters) {
     (void)pvParameters;

@@ -17,6 +17,9 @@ pico_sdk_init()
 # Adiciona o executável principal
 add_executable(main
     src/main.cpp               # Código principal
+    drivers/i2c_sensors.cpp
+    drivers/tof.cpp
+    handlers/tof_handler.cpp
     drivers/mpu6050.cpp        # Implementação do driver do sensor
     handlers/mpu6050_handler.cpp # Implementação das tarefas relacionadas aos sensores
 )

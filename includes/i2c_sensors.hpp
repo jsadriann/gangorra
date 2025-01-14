@@ -23,7 +23,7 @@ public:
     virtual ~i2c_sensors();
 
     // Initialize I2C
-    void initialize();
+    void initialize() const;
 };
 
 #endif  // I2C_SENSORS_HPP
