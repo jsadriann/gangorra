@@ -69,11 +69,7 @@ void mpu6050::mpu6050_init() const {
 
     if (who_am_i != WHO_AM_I_VALUE) {
         printf("MPU6050 not found!\n");
-
-        while (true) {
-            printf("Não foi possível ler o dispositivo\n");
-            sleep_ms(1000);
-        }
+        sleep_ms(1000);
     }
 }
 

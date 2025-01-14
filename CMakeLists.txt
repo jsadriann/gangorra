@@ -29,13 +29,19 @@ target_include_directories(main PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/handlers # Diretório com implementações dos handlers
 )
 
+add_library(freertos_config INTERFACE)
+
 # Vincula as bibliotecas necessárias
 target_link_libraries(main
     pico_stdlib               # Biblioteca padrão do Pico SDK
     hardware_i2c              # Biblioteca de hardware I2C do Pico SDK
-    FreeRTOS-Kernel           # Núcleo do FreeRTOS
+    FreeRTOS-Kernel  
+    freertos_config         # Núcleo do FreeRTOS
     FreeRTOS-Kernel-Heap4     # Gerenciador de heap do FreeRTOS
 )
 
+pico_enable_stdio_usb(main 1)
+
 # Gera arquivos extras (UF2, bin, map, etc.)
 pico_add_extra_outputs(main)
+

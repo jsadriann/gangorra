@@ -41,6 +41,7 @@
  *----------------------------------------------------------*/
 
 /* Scheduler Related */
+#define configUSE_PASSIVE_IDLE_HOOK             0
 #define configUSE_PREEMPTION                    1
 #define configUSE_TICKLESS_IDLE                 0
 #define configUSE_IDLE_HOOK                     0
@@ -71,8 +72,8 @@
 /* Memory allocation related definitions. */
 #define configSUPPORT_STATIC_ALLOCATION         0
 #define configSUPPORT_DYNAMIC_ALLOCATION        1
-#define configTOTAL_HEAP_SIZE                   (128*1024)
-#define configAPPLICATION_ALLOCATED_HEAP        0
+#define configTOTAL_HEAP_SIZE                   (100*1024)
+#define configAPPLICATION_ALLOCATED_HEAP        1
 
 /* Hook function related definitions. */
 #define configCHECK_FOR_STACK_OVERFLOW          0
@@ -102,7 +103,7 @@
 */
 
 /* SMP port only */
-#define configNUM_CORES                         2
+#define configNUMBER_OF_CORES                   2
 #define configTICK_CORE                         0
 #define configRUN_MULTIPLE_PRIORITIES           1
 #define configUSE_CORE_AFFINITY                 1

@@ -7,6 +7,8 @@ using namespace std;
 #include <cstdio>
 #include <cstdint>
 #include <cstdlib>
+#include "FreeRTOS.h"
+#include "task.h"
 
 // I2C defines
 #define MPU6050_ADDR                   0x68
