@@ -19,8 +19,8 @@ public:
     // Read distance measurement
     uint16_t get_distance();
 
-    // Display distance measurement
-    void to_string(uint16_t *distance);
+    // Simple moving average (SMA) filter
+    uint16_t apply_sma(uint16_t*);
 };
 
-#endif // TOF_HPP
+#endif //TOF_HPP
