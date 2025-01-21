@@ -78,6 +78,7 @@ private:
 
     void mpu6050_sensors_configure() const;
 
+
     /*
      * [NAME]:        Init
      * [FUNCTION]:    mpu6050_init()
@@ -93,6 +94,7 @@ public:
      * [PARAMETERS]:  *i2c_port - type of i2c, sda - number of sda pin , scl - number of scl pin
      * [DESCRIPTION]: Constructor of class
      */
+    inline void _delay_ms(int ms) const;
     mpu6050(i2c_inst *i2c_port,uint16_t sda,uint16_t scl);
 
     /*

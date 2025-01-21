@@ -6,6 +6,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
+#include "mpu6050.hpp"
 
 typedef struct {
     accel accelData;
@@ -16,5 +17,11 @@ typedef struct xMailboxManager{
     TickType_t xTimeStamp;
     MpuData_h mpu;
 }MpuMailbox_t;
+
+typedef struct task_params {
+    mpu6050* sensor;
+    QueueHandle_t mailbox;
+}mpu_params;
+
 
 #endif // DATASTRUCTURE_H

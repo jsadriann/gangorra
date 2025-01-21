@@ -13,7 +13,6 @@ protected:
     uint sda_pin;
     uint scl_pin;
     uint32_t baudrate = 400000;
-
 public:
     // Constructor
     i2c_sensors(i2c_inst_t* i2c, uint sda, uint scl, uint32_t baudrate)

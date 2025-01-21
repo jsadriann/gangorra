@@ -22,6 +22,7 @@ add_executable(main
     handlers/tof_handler.cpp
     drivers/mpu6050.cpp        # Implementação do driver do sensor
     handlers/mpu6050_handler.cpp # Implementação das tarefas relacionadas aos sensores
+    handlers/serial.cpp 
 )
 
 # Adiciona os diretórios de include

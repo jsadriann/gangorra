@@ -1,5 +1,11 @@
 #include "mpu6050.hpp"
 
+inline void mpu6050::_delay_ms(int ms) const {
+    for (volatile int i = 0; i < ms * 800; i++) {
+        __asm__("nop");
+    }
+}
+
 mpu6050::mpu6050(i2c_inst *i2c_port, uint16_t sda, uint16_t scl) {
     this->i2c_port = i2c_port;
     this->scl = scl;
@@ -15,13 +21,14 @@ mpu6050::~mpu6050() {
 void mpu6050::mpu6050_reset() const {
     uint8_t reset[] = {REG_PWR_MGMT_1, 0x80};
     i2c_write_blocking(i2c_port, MPU6050_ADDR, reset, 2, false);
+    _delay_ms(2000);
+    
 
-    sleep_ms(200);
 
     uint8_t wake[] = {REG_PWR_MGMT_1, 0x00};
     i2c_write_blocking(i2c_port, MPU6050_ADDR, wake, 2, false);
-
-    sleep_ms(200);
+    _delay_ms(200);
+    //vTaskDelay(pdMS_TO_TICKS(200)); 
 }
 
 void mpu6050::mpu6050_port_configure() const {
@@ -39,14 +46,18 @@ void mpu6050::mpu6050_sensors_configure() const {
     // Set sample rate
     uint8_t sample_rate[] = {REG_SMPLRT_DIV, SAMPLE_RATE_DIV};
     i2c_write_blocking(i2c_port, MPU6050_ADDR, sample_rate, 2, false);
-
+    //vTaskDelay(pdMS_TO_TICKS(200)); 
+    _delay_ms(200);
 
     uint8_t accel_config[] = {REG_ACCEL_CONFIG, ACCEL_CONFIG_VALUE};
     i2c_write_blocking(i2c_port, MPU6050_ADDR, accel_config, 2, false);
-
+    //vTaskDelay(pdMS_TO_TICKS(200)); 
+    _delay_ms(200);
     // Set gyroscope range
     uint8_t gyro_config[] = {REG_GYRO_CONFIG, GYRO_CONFIG_VALUE};
     i2c_write_blocking(i2c_port, MPU6050_ADDR, gyro_config, 2, false);
+    //vTaskDelay(pdMS_TO_TICKS(200)); 
+    _delay_ms(200);
 }
 
 void mpu6050::mpu6050_init() const {
@@ -59,17 +70,18 @@ void mpu6050::mpu6050_init() const {
     uint8_t reg = WHO_AM_I_REG;
 
     i2c_write_blocking(i2c_port, MPU6050_ADDR, &reg, 1, true);
+    //vTaskDelay(pdMS_TO_TICKS(200)); 
+    _delay_ms(200);
     i2c_read_blocking(i2c_port, MPU6050_ADDR, &who_am_i, 1, false);
-
-    sleep_ms(200);
+    //vTaskDelay(pdMS_TO_TICKS(200)); 
+    _delay_ms(200);
 
     printf("MPU6050 WHO_AM_I: 0x%02X\n", who_am_i);
-
-    sleep_ms(200);
+    //vTaskDelay(pdMS_TO_TICKS(1000)); 
+    _delay_ms(200);
 
     if (who_am_i != WHO_AM_I_VALUE) {
         printf("MPU6050 not found!\n");
-        sleep_ms(1000);
     }
 }
 
