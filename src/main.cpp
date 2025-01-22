@@ -1,42 +1,3 @@
-// #include <stdio.h>
-// #include "pico/stdlib.h"
-// #include "FreeRTOS.h"
-// #include "task.h"
-// #include "queue.h"
-// #include "dataStructure.h"
-// #include "mpu6050_handler.h"
-// #include "serial.h"
-// #include "mpu6050.hpp"
-// __attribute__((section(".rtos_heap"))) uint8_t ucHeap[configTOTAL_HEAP_SIZE];
-// int main() {
-//     stdio_init_all();
-//     // Defina os pinos I2C e a porta I2C
-//     i2c_inst *i2c_port = i2c0;  // ou i2c1, dependendo da sua configuração
-//     uint16_t sda_pin = 0;       // pino SDA
-//     uint16_t scl_pin = 1;       // pino SCL
-
-//     // Cria uma instância do sensor MPU6050
-//     mpu6050 sensor(i2c_port, sda_pin, scl_pin);
-
-//     // Inicializa as estruturas para armazenar os dados do acelerômetro e giroscópio
-//     accel accelData;
-//     gyro gyroData;
-
-//     // Loop para imprimir os dados do sensor
-//     while (true) {
-//         // Imprime os dados brutos (acelerômetro e giroscópio)
-//         sensor.getAccel(&accelData);
-//         sensor.getGyro(&gyroData);
-//         sensor.print_raw_data(accelData, gyroData);
-
-//         // Espera 1 segundo antes de ler novamente
-//         sleep_ms(1000);
-//     }
-
-//     return 0;  // Nunca deve chegar aqui, pois o loop é infinito
-// }
-
-
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "FreeRTOS.h"
@@ -45,7 +6,12 @@
 #include "dataStructure.h"
 #include "mpu6050_handler.h"
 #include "serial.h"
+#include "message.hpp"
 
+#define LOG_BUFFER_SIZE 512
+#define RUN_TIME_BUFFER_SIZE 512
+
+void vSystemLogTask(void *pvParameters);
 
 
 // Definição do heap para o FreeRTOS
@@ -53,21 +19,15 @@ __attribute__((section(".rtos_heap"))) uint8_t ucHeap[configTOTAL_HEAP_SIZE];
 
 #define QUEUE_SIZE 1 // Define o tamanho da fila (pode ser ajustado conforme necessário)
 
-QueueHandle_t xMailbox; // Fila para armazenar dados do sensor
-
-// Prototipação das tarefas
-//void TaskUpdate(void *pvParameters);
-//void TaskRead(void *pvParameters);
+QueueHandle_t xMailbox; // Fila para armazenar dados do Mpu
+QueueHandle_t xMessageEsp;
 
 int main() {
     stdio_init_all();
-    //inicializando a uart
-    uart_init(UART_ID, BAUD_RATE);
-    gpio_set_function(TX_PIN, GPIO_FUNC_UART);
-    gpio_set_function(RX_PIN, GPIO_FUNC_UART);
 
     //cria o Mailbox pra cada sensor
     xMailbox = xQueueCreate(1, sizeof(MpuMailbox_t));
+    xMessageEsp = xQueueCreate(10, sizeof(Message));
     //inicializa o i2c, aqui não to utilizando a superclass do i2c ainda não
     i2c_inst_t *i2c_port = i2c0;
     //cria uma instancia do mpu
@@ -78,12 +38,18 @@ int main() {
     mpu_params mpu;
     mpu.sensor = &sensor;
     mpu.mailbox = xMailbox;
+
+    char buffer[0xffff];
+    
     //cria as tarefas de ler o sensor e adicionar o dado no mailbox
     // e a outra de ler do mailbox pra testar se ta ok a comunicação entre as tasks
-    xTaskCreate(vTaskReadMpu, "Task1", 256, &mpu, 1, NULL); // Tarefa 1 com prioridade 1
-    xTaskCreate(vTaskPrintMpu, "Task2", 256, &mpu, 1, NULL); // Tarefa 2 com prioridade 1
-    xTaskCreate(vTaskReceiveSerialData, "Task3", 256, NULL, 1, NULL);
-    xTaskCreate(vTaskSendSerialData, "Task4", 256, NULL, 1, NULL);
+    xTaskCreate(vTaskReadMpu, "Task MPU read", 256, &mpu, 2, NULL); // Tarefa 1 com prioridade 1
+    xTaskCreate(vTaskPrintMpu, "Task MPU print", 256, &mpu, 2, NULL); // Tarefa 2 com prioridade 1
+    xTaskCreate(vUartTask, "Task UART", 1000, xMessageEsp, 1, NULL);
+    xTaskCreate(vProcessTask, "Task Process", 1000, xMessageEsp, 1, NULL);
+    //xTaskCreate(vTaskReceiveSerialData, "Task UART receive", 256, NULL, 1, NULL);
+    //xTaskCreate(vTaskSendSerialData, "Task UART send", 256, NULL, 1, NULL);
+    xTaskCreate(vSystemLogTask,"Task Log", 256, buffer, 1, NULL);
 
     //escalona as tarefas
     vTaskStartScheduler();
@@ -93,4 +59,38 @@ int main() {
         sleep_ms(1000);
     }
     return 0;
+}
+
+void vSystemLogTask(void *pvParameters) {
+    char* pcWrite = (char*)pvParameters;
+    const TickType_t logInterval = pdMS_TO_TICKS(4000); // Log a cada 2 segundos
+
+    while (true) {
+        printf("\n================= ESTADO DO SISTEMA =================\n");
+
+        // Log do uso de memória heap
+        size_t freeHeap = xPortGetFreeHeapSize();
+        size_t minHeap = xPortGetMinimumEverFreeHeapSize();
+        printf("Uso de Memória:\n");
+        printf("Heap Livre: %lu bytes\n", freeHeap);
+        printf("Heap Mínimo Já Registrado: %lu bytes\n\n", minHeap);
+
+        // Log do estado das tasks
+        printf("Estado das Tasks:\n");
+        printf("Task Name\tStatus\tPri\tStack\tTask\tCoreAf#\n");
+        vTaskList(pcWrite);
+        printf("%s\n", pcWrite);
+
+        // Estatísticas de tempo de execução (se configurado)
+#if configGENERATE_RUN_TIME_STATS
+        printf("Tempo de Execução das Tasks:\n");
+        vTaskGetRunTimeStats(pcWrite);
+        printf("%s\n", pcWrite);
+#endif
+
+        printf("=====================================================\n");
+
+        // Delay para o próximo log
+        vTaskDelay(logInterval);
+    }
 }

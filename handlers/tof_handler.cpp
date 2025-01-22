@@ -2,6 +2,7 @@
 
 void TaskUpdate(void *pvParameters)
 {
+    QueueHandle_t xMailbox;
     // Retrieve the TOF10120 sensor object passed as a parameter
     TOF10120* tof_sensor = static_cast<TOF10120*>(pvParameters);
 
@@ -31,6 +32,7 @@ void TaskUpdate(void *pvParameters)
 // Task to process the ToF readings (consumer task)
 void TaskRead(void *pvParameters)
 {
+    QueueHandle_t xMailbox;
     tof_data_t reading;
 
     while (true)
