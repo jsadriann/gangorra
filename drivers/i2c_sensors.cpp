@@ -1,5 +1,3 @@
-//TO-DO: Test
-
 #include "i2c_sensors.hpp"
 
 i2c_sensors::~i2c_sensors()

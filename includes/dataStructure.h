@@ -13,6 +13,11 @@ typedef struct {
     gyro gyroData;
 } MpuData_h;
 
+typedef struct {
+    uint16_t distance; // Distance storage
+    TickType_t xTimeStamp;
+} tof_data_t;
+
 typedef struct xMailboxManager{
     TickType_t xTimeStamp;
     MpuData_h mpu;
@@ -22,6 +27,5 @@ typedef struct task_params {
     mpu6050* sensor;
     QueueHandle_t mailbox;
 }mpu_params;
-
 
 #endif // DATASTRUCTURE_H
