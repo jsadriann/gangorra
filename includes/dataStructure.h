@@ -1,5 +1,7 @@
 #ifndef DATASTRUCTURE_H
 #define DATASTRUCTURE_H
+
+#include <motor.hpp>
 #include "mpu6050.hpp"
 #include <stdio.h>
 #include "pico/stdlib.h"
@@ -27,5 +29,10 @@ typedef struct task_params {
     mpu6050* sensor;
     QueueHandle_t mailbox;
 }mpu_params;
+
+typedef struct motor_task_params {
+    Motor* motor;
+    QueueHandle_t mailbox;
+}motor_params;
 
 #endif // DATASTRUCTURE_H
