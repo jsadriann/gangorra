@@ -26,6 +26,7 @@ add_executable(main
     handlers/serial.cpp
     drivers/motor.cpp
     handlers/motor_handler.cpp
+    handlers/control_handler.cpp
 )
 
 # Adiciona os diretórios de include
