@@ -7,6 +7,8 @@
 #include "mpu6050_handler.h"
 #include "serial.h"
 #include "message.hpp"
+#include "motor_handler.h"
+#include "control_handler.h"
 
 #define LOG_BUFFER_SIZE 512
 #define RUN_TIME_BUFFER_SIZE 512
@@ -21,6 +23,7 @@ __attribute__((section(".rtos_heap"))) uint8_t ucHeap[configTOTAL_HEAP_SIZE];
 
 QueueHandle_t xMailbox; // Fila para armazenar dados do Mpu
 QueueHandle_t xMessageEsp;
+QueueHandle_t xMotor;
 
 int main() {
     stdio_init_all();
@@ -28,6 +31,8 @@ int main() {
     //cria o Mailbox pra cada sensor
     xMailbox = xQueueCreate(1, sizeof(MpuMailbox_t));
     xMessageEsp = xQueueCreate(10, sizeof(Message));
+    xMotor = xQueueCreate(10, sizeof(int));
+
     //inicializa o i2c, aqui não to utilizando a superclass do i2c ainda não
     i2c_inst_t *i2c_port = i2c0;
     //cria uma instancia do mpu
@@ -40,7 +45,13 @@ int main() {
     mpu.mailbox = xMailbox;
 
     char buffer[0xffff];
-    
+
+    Motor left_motor(300, 15);
+
+    motor_params left_motor_params;
+    left_motor_params.motor = &left_motor;
+    left_motor_params.mailbox = xMotor;
+
     //cria as tarefas de ler o sensor e adicionar o dado no mailbox
     // e a outra de ler do mailbox pra testar se ta ok a comunicação entre as tasks
     xTaskCreate(vTaskReadMpu, "Task MPU read", 256, &mpu, 2, NULL); // Tarefa 1 com prioridade 1
@@ -50,6 +61,8 @@ int main() {
     //xTaskCreate(vTaskReceiveSerialData, "Task UART receive", 256, NULL, 1, NULL);
     //xTaskCreate(vTaskSendSerialData, "Task UART send", 256, NULL, 1, NULL);
     xTaskCreate(vSystemLogTask,"Task Log", 256, buffer, 1, NULL);
+    xTaskCreate(vTaskMotorControl, "Left Motor Task", 1000, &left_motor_params, 2, NULL);
+    xTaskCreate(potentiometerTask, "Potentiometer Task", 1000, xMotor, 2, NULL);
 
     //escalona as tarefas
     vTaskStartScheduler();

@@ -23,7 +23,10 @@ add_executable(main
     handlers/tof_handler.cpp
     drivers/mpu6050.cpp        # Implementação do driver do sensor
     handlers/mpu6050_handler.cpp # Implementação das tarefas relacionadas aos sensores
-    handlers/serial.cpp 
+    handlers/serial.cpp
+    drivers/motor.cpp
+    handlers/motor_handler.cpp
+    handlers/control_handler.cpp
 )
 
 # Adiciona os diretórios de include
@@ -40,6 +43,8 @@ add_library(freertos_config INTERFACE)
 target_link_libraries(main
     pico_stdlib               # Biblioteca padrão do Pico SDK
     hardware_i2c              # Biblioteca de hardware I2C do Pico SDK
+    hardware_pwm
+    hardware_adc
     FreeRTOS-Kernel  
     freertos_config         # Núcleo do FreeRTOS
     FreeRTOS-Kernel-Heap4     # Gerenciador de heap do FreeRTOS
@@ -50,3 +55,9 @@ pico_enable_stdio_usb(main 1)
 # Gera arquivos extras (UF2, bin, map, etc.)
 pico_add_extra_outputs(main)
 
+add_custom_command(TARGET main POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        main.uf2
+        /media/$ENV{USER}/RPI-RP2/
+        COMMENT "Copiando motorProject.uf2 para a Raspberry Pi Pico"
+)
