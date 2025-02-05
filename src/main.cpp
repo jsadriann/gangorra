@@ -49,10 +49,15 @@ int main() {
     char buffer[0xffff];
 
     Motor left_motor(300, 15);
+    Motor right_motor(300, 14);
 
     motor_params left_motor_params;
     left_motor_params.motor = &left_motor;
     left_motor_params.mailbox = xLeftMotor;
+
+    motor_params right_motor_params;
+    right_motor_params.motor = &right_motor;
+    right_motor_params.mailbox = xRightMotor;
 
     PIDParams_t pid_params;
     pid_params.leftMotorQueue = xLeftMotor;
@@ -68,7 +73,8 @@ int main() {
     //xTaskCreate(vTaskReceiveSerialData, "Task UART receive", 256, NULL, 1, NULL);
     //xTaskCreate(vTaskSendSerialData, "Task UART send", 256, NULL, 1, NULL);
     xTaskCreate(vSystemLogTask,"Task Log", 256, buffer, 1, NULL);
-    // xTaskCreate(vTaskMotorControl, "Left Motor Task", 1000, &left_motor_params, 2, NULL);
+    xTaskCreate(vTaskMotorControl, "Left Motor Task", 1000, &left_motor_params, 1, NULL);
+    xTaskCreate(vTaskMotorControl, "Right Motor Task", 1000, &right_motor_params, 1, NULL);
     // xTaskCreate(potentiometerTask, "Potentiometer Task", 1000, xMotor, 2, NULL);
     xTaskCreate(vPIDParametersTask, "PID Task", 1000, &pid_params, 3, NULL);
 

@@ -39,7 +39,6 @@ void Motor::pwm_set_freq() {
 }
 
 void Motor::vInitMotors() {
-	stdio_init_all();
 	gpio_set_function(this->gpio, GPIO_FUNC_PWM);
 
 	this->pwm_set_freq();
