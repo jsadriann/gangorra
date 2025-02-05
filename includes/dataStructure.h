@@ -23,6 +23,7 @@ typedef struct {
 typedef struct xMailboxManager{
     TickType_t xTimeStamp;
     MpuData_h mpu;
+    float angle;
 }MpuMailbox_t;
 
 typedef struct task_params {
