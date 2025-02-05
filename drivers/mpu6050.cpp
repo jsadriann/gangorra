@@ -70,14 +70,11 @@ void mpu6050::mpu6050_init() const {
     uint8_t reg = WHO_AM_I_REG;
 
     i2c_write_blocking(i2c_port, MPU6050_ADDR, &reg, 1, true);
-    //vTaskDelay(pdMS_TO_TICKS(200)); 
     _delay_ms(200);
     i2c_read_blocking(i2c_port, MPU6050_ADDR, &who_am_i, 1, false);
-    //vTaskDelay(pdMS_TO_TICKS(200)); 
     _delay_ms(200);
 
     printf("MPU6050 WHO_AM_I: 0x%02X\n", who_am_i);
-    //vTaskDelay(pdMS_TO_TICKS(1000)); 
     _delay_ms(200);
 
     if (who_am_i != WHO_AM_I_VALUE) {
@@ -167,4 +164,14 @@ void mpu6050::toString(char *buffer, size_t buffer_size, accel accelData, gyro g
         "gX = %.2f dps | gY = %.2f dps | gZ = %.2f dps | \n",
         accel_g[0], accel_g[1], accel_g[2],
         gyro_dps[0], gyro_dps[1], gyro_dps[2]);
+}
+
+void mpu6050::getAngle(float &angle, accel accelData) {
+    // Converter os dados para unidades de gravidade
+    const float accel_x = static_cast<float>(accelData.accel_x) / ACCEL_SCALE_FACTOR;
+    const float accel_y = static_cast<float>(accelData.accel_y) / ACCEL_SCALE_FACTOR;
+    const float accel_z = static_cast<float>(accelData.accel_z) / ACCEL_SCALE_FACTOR;
+
+    // Calcular o ângulo em relação ao eixo X
+    angle = atan2(accel_y, sqrt(accel_x * accel_x + accel_z * accel_z)) * (180.0 / M_PI);
 }
