@@ -9,6 +9,7 @@
 #include "message.hpp"
 #include "motor_handler.h"
 #include "control_handler.h"
+#include "kalman_filter_handler.h"
 
 #define LOG_BUFFER_SIZE 512
 #define RUN_TIME_BUFFER_SIZE 512
@@ -63,6 +64,7 @@ int main() {
     xTaskCreate(vSystemLogTask,"Task Log", 256, buffer, 1, NULL);
     xTaskCreate(vTaskMotorControl, "Left Motor Task", 1000, &left_motor_params, 2, NULL);
     xTaskCreate(potentiometerTask, "Potentiometer Task", 1000, xMotor, 2, NULL);
+    xTaskCreate(vTaskKalmanMPU6050Angle, "Task Kalman MPU filter", 256, &mpu, 2, NULL);
 
     //escalona as tarefas
     vTaskStartScheduler();
