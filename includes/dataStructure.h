@@ -36,4 +36,10 @@ typedef struct motor_task_params {
     QueueHandle_t mailbox;
 }motor_params;
 
+typedef struct pid_task_paramas {
+    QueueHandle_t mpuMailbox;
+    QueueHandle_t leftMotorQueue;
+    QueueHandle_t rightMotorQueue;
+}PIDParams_t;
+
 #endif // DATASTRUCTURE_H
