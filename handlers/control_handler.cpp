@@ -29,7 +29,7 @@ void vPIDParametersTask(void *pvParameters) {
 	float time = 0, elapsedTime = 0, timePrev = 0;
 
 	float previous_error = 0, error = 0;
-	float PID, pid_p = 0, pid_i = 0, pid_d = 0;
+	float pid_p = 0, pid_i = 0, pid_d = 0;
 
 	// Constantes do PID
 	MpuMailbox_t mailbox;
@@ -52,7 +52,7 @@ void vPIDParametersTask(void *pvParameters) {
 		}
 		pid_d = kd * ((error - previous_error) / elapsedTime);
 
-		PID = pid_p + pid_i + pid_d;
+		float PID = pid_p + pid_i + pid_d;
 
 		printf("P: %.2f I: %.2f D: %.2f \n", pid_p, pid_i, pid_d);
 		// Limitar valores do PID
@@ -61,10 +61,10 @@ void vPIDParametersTask(void *pvParameters) {
 
 		printf("PID: %.2f\n", PID);
 
-		// Cálculo do PWM
-		float pwmLeft  = fminf(fmaxf(throttle + PID, 1000), 2000);
-		float pwmRight = fminf(fmaxf(throttle - PID, 1000), 2000);
+		float pwmLeft  = fminf(fmaxf(throttle + PID, 1300), 2000);
+		float pwmRight = fminf(fmaxf(throttle - PID, 1300), 2000);
 
+		//Normalize duty cycle to percentual form before send for queue
 		const int dutyLeft = (pwmLeft - 1000) / 10.0;
 		const int dutyRight = (pwmRight - 1000) / 10.0;
 
