@@ -1,13 +1,5 @@
 #include "motor.hpp"
 
-#include <cstdio>
-#include <pico/stdio.h>
-#include <pico/time.h>
-
-#include "hardware/pwm.h"
-#include "hardware/gpio.h"
-
-
 Motor::Motor(const uint32_t frequency, const uint gpio) {
 	this->frequency = frequency;
 	this->gpio = gpio;
@@ -46,15 +38,6 @@ void Motor::vInitMotors() {
 	this->setSpeed(0);
 
 	pwm_set_enabled(this->slice_num, true);
-
-	printf("Inincializando, colocando 30%% para começar\n");
-	this->setSpeed(30);
-
-	sleep_ms(3000);
-	printf("Começou, colocando 40%% como vel padrão\n");
-	this->setSpeed(40);
-	sleep_ms(1000);
-	printf("acabei a função de init \n");
 }
 
 void Motor::setSpeed(const uint speed) const {

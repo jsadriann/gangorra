@@ -6,6 +6,10 @@
 #define MOTOR_H
 
 #include "hardware/pwm.h"
+#include "hardware/gpio.h"
+#include <cstdio>
+#include <pico/stdio.h>
+
 
 #define RASP_CLOCK 125000000
 
