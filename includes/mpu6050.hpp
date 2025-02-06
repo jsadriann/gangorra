@@ -2,6 +2,7 @@
 #define MPU6050_H
 
 using namespace std;
+#include <i2c_sensors.hpp>
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 #include <cstdio>
@@ -65,21 +66,17 @@ typedef struct {
     int16_t accel_z;
 }accel;
 
-class mpu6050
+class mpu6050 : public i2c_sensors
 {
 private:
     /* data */
-    i2c_inst *i2c_port;
-    uint16_t sda;
-    uint16_t scl;
-
     void mpu6050_reset() const;
 
     void mpu6050_port_configure() const;
 
     void mpu6050_sensors_configure() const;
 
-
+public:
     /*
      * [NAME]:        Init
      * [FUNCTION]:    mpu6050_init()
@@ -87,7 +84,6 @@ private:
      * [DESCRIPTION]: Initialize every necessary pin and i2c parameters for the mpu6050 sensors usage
      */
     void mpu6050_init() const;
-public:
 
     /*
      * [NAME]:        mpu6050
@@ -95,16 +91,10 @@ public:
      * [PARAMETERS]:  *i2c_port - type of i2c, sda - number of sda pin , scl - number of scl pin
      * [DESCRIPTION]: Constructor of class
      */
-    inline void _delay_ms(int ms) const;
-    mpu6050(i2c_inst *i2c_port,uint16_t sda,uint16_t scl);
+    mpu6050(i2c_inst *i2c_port,uint16_t sda,uint16_t scl):
+      i2c_sensors(i2c_port, sda, scl, 400000){}
 
-    /*
-     * [NAME]:        mpu6050
-     * [FUNCTION]:    ~mpu6050()
-     * [PARAMETERS]:  void
-     * [DESCRIPTION]: Destructor of class
-     */
-    ~mpu6050();
+    inline void _delay_ms(int ms) const;;
 
     /*
      *

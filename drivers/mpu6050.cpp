@@ -6,18 +6,6 @@ inline void mpu6050::_delay_ms(int ms) const {
     }
 }
 
-mpu6050::mpu6050(i2c_inst *i2c_port, uint16_t sda, uint16_t scl) {
-    this->i2c_port = i2c_port;
-    this->scl = scl;
-    this->sda = sda;
-
-    mpu6050_init();
-}
-
-mpu6050::~mpu6050() {
-    mpu6050_reset();
-}
-
 void mpu6050::mpu6050_reset() const {
     uint8_t reset[] = {REG_PWR_MGMT_1, 0x80};
     i2c_write_blocking(i2c_port, MPU6050_ADDR, reset, 2, false);
@@ -29,17 +17,6 @@ void mpu6050::mpu6050_reset() const {
     i2c_write_blocking(i2c_port, MPU6050_ADDR, wake, 2, false);
     _delay_ms(200);
     //vTaskDelay(pdMS_TO_TICKS(200)); 
-}
-
-void mpu6050::mpu6050_port_configure() const {
-    // Initialize chosen serial port
-    stdio_init_all();
-    // Initialize I2C
-    i2c_init(i2c_port, 400 * 1000);
-    gpio_set_function(sda, GPIO_FUNC_I2C);
-    gpio_pull_up(sda);
-    gpio_set_function(scl, GPIO_FUNC_I2C);
-    gpio_pull_up(scl);
 }
 
 void mpu6050::mpu6050_sensors_configure() const {
@@ -62,7 +39,8 @@ void mpu6050::mpu6050_sensors_configure() const {
 
 void mpu6050::mpu6050_init() const {
     // Reset and configure MPU6050
-    mpu6050_port_configure();
+    this->initialize();
+
     mpu6050_reset();
     mpu6050_sensors_configure();
 
