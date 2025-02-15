@@ -6,18 +6,6 @@ inline void mpu6050::_delay_ms(int ms) const {
     }
 }
 
-mpu6050::mpu6050(i2c_inst *i2c_port, uint16_t sda, uint16_t scl) {
-    this->i2c_port = i2c_port;
-    this->scl = scl;
-    this->sda = sda;
-
-    mpu6050_init();
-}
-
-mpu6050::~mpu6050() {
-    mpu6050_reset();
-}
-
 void mpu6050::mpu6050_reset() const {
     uint8_t reset[] = {REG_PWR_MGMT_1, 0x80};
     i2c_write_blocking(i2c_port, MPU6050_ADDR, reset, 2, false);
@@ -29,17 +17,6 @@ void mpu6050::mpu6050_reset() const {
     i2c_write_blocking(i2c_port, MPU6050_ADDR, wake, 2, false);
     _delay_ms(200);
     //vTaskDelay(pdMS_TO_TICKS(200)); 
-}
-
-void mpu6050::mpu6050_port_configure() const {
-    // Initialize chosen serial port
-    stdio_init_all();
-    // Initialize I2C
-    i2c_init(i2c_port, 400 * 1000);
-    gpio_set_function(sda, GPIO_FUNC_I2C);
-    gpio_pull_up(sda);
-    gpio_set_function(scl, GPIO_FUNC_I2C);
-    gpio_pull_up(scl);
 }
 
 void mpu6050::mpu6050_sensors_configure() const {
@@ -62,7 +39,8 @@ void mpu6050::mpu6050_sensors_configure() const {
 
 void mpu6050::mpu6050_init() const {
     // Reset and configure MPU6050
-    mpu6050_port_configure();
+    this->initialize();
+
     mpu6050_reset();
     mpu6050_sensors_configure();
 
@@ -70,14 +48,11 @@ void mpu6050::mpu6050_init() const {
     uint8_t reg = WHO_AM_I_REG;
 
     i2c_write_blocking(i2c_port, MPU6050_ADDR, &reg, 1, true);
-    //vTaskDelay(pdMS_TO_TICKS(200)); 
     _delay_ms(200);
     i2c_read_blocking(i2c_port, MPU6050_ADDR, &who_am_i, 1, false);
-    //vTaskDelay(pdMS_TO_TICKS(200)); 
     _delay_ms(200);
 
     printf("MPU6050 WHO_AM_I: 0x%02X\n", who_am_i);
-    //vTaskDelay(pdMS_TO_TICKS(1000)); 
     _delay_ms(200);
 
     if (who_am_i != WHO_AM_I_VALUE) {
@@ -167,4 +142,14 @@ void mpu6050::toString(char *buffer, size_t buffer_size, accel accelData, gyro g
         "gX = %.2f dps | gY = %.2f dps | gZ = %.2f dps | \n",
         accel_g[0], accel_g[1], accel_g[2],
         gyro_dps[0], gyro_dps[1], gyro_dps[2]);
+}
+
+void mpu6050::getAngle(float &angle, accel accelData) {
+    // Converter os dados para unidades de gravidade
+    const float accel_x = static_cast<float>(accelData.accel_x) / ACCEL_SCALE_FACTOR;
+    const float accel_y = static_cast<float>(accelData.accel_y) / ACCEL_SCALE_FACTOR;
+    const float accel_z = static_cast<float>(accelData.accel_z) / ACCEL_SCALE_FACTOR;
+
+    // Calcular o ângulo em relação ao eixo X
+    angle = atan2(accel_y, sqrt(accel_x * accel_x + accel_z * accel_z)) * (180.0 / M_PI);
 }

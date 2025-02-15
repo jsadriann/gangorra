@@ -2,11 +2,13 @@
 #define MPU6050_H
 
 using namespace std;
+#include <i2c_sensors.hpp>
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 #include <cstdio>
 #include <cstdint>
 #include <cstdlib>
+#include <cmath>
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -21,7 +23,7 @@ using namespace std;
 #define WHO_AM_I_REG                   0x75
 //IMPORTANT! Some clone mpu have the address of i2c different of the default value 0x68 and 0x69
 //so, identify the correct value and alter this macro
-#define WHO_AM_I_VALUE                  0x72
+#define WHO_AM_I_VALUE                  0x68
 
 #define REG_ACCEL_XOUT_H                0x3B
 #define	REG_ACCEL_YOUT_H	               0x3D
@@ -64,21 +66,17 @@ typedef struct {
     int16_t accel_z;
 }accel;
 
-class mpu6050
+class mpu6050 : public i2c_sensors
 {
 private:
     /* data */
-    i2c_inst *i2c_port;
-    uint16_t sda;
-    uint16_t scl;
-
     void mpu6050_reset() const;
 
     void mpu6050_port_configure() const;
 
     void mpu6050_sensors_configure() const;
 
-
+public:
     /*
      * [NAME]:        Init
      * [FUNCTION]:    mpu6050_init()
@@ -86,7 +84,6 @@ private:
      * [DESCRIPTION]: Initialize every necessary pin and i2c parameters for the mpu6050 sensors usage
      */
     void mpu6050_init() const;
-public:
 
     /*
      * [NAME]:        mpu6050
@@ -94,16 +91,10 @@ public:
      * [PARAMETERS]:  *i2c_port - type of i2c, sda - number of sda pin , scl - number of scl pin
      * [DESCRIPTION]: Constructor of class
      */
-    inline void _delay_ms(int ms) const;
-    mpu6050(i2c_inst *i2c_port,uint16_t sda,uint16_t scl);
+    mpu6050(i2c_inst *i2c_port,uint16_t sda,uint16_t scl):
+      i2c_sensors(i2c_port, sda, scl, 400000){}
 
-    /*
-     * [NAME]:        mpu6050
-     * [FUNCTION]:    ~mpu6050()
-     * [PARAMETERS]:  void
-     * [DESCRIPTION]: Destructor of class
-     */
-    ~mpu6050();
+    inline void _delay_ms(int ms) const;;
 
     /*
      *
@@ -146,6 +137,15 @@ public:
     *                gX = %.2f dps | gY = %.2f dps | gZ = %.2f dps | \n
     */
     void toString(char *buffer, size_t buffer_size, accel accelData, gyro gyroData) const;
+
+    /**
+     * [NAME]:        getAngle
+     * [FUNCTION]:    getAngle(float &angle)
+     * [PARAMETERS]:  float &angle - referência para armazenar o ângulo calculado
+     * [DESCRIPTION]: Calcula o ângulo de inclinação da gangorra com base nos dados do acelerômetro,
+     *                utilizando o método original sem filtragem.
+     */
+    static void getAngle(float &angle, accel accelData);
 };
 
 #endif

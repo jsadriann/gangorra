@@ -14,7 +14,8 @@
 #define RUN_TIME_BUFFER_SIZE 512
 
 void vSystemLogTask(void *pvParameters);
-
+void vInitializeMotors();
+void vInitializeStructParams();
 
 // Definição do heap para o FreeRTOS
 __attribute__((section(".rtos_heap"))) uint8_t ucHeap[configTOTAL_HEAP_SIZE];
@@ -23,46 +24,44 @@ __attribute__((section(".rtos_heap"))) uint8_t ucHeap[configTOTAL_HEAP_SIZE];
 
 QueueHandle_t xMailbox; // Fila para armazenar dados do Mpu
 QueueHandle_t xMessageEsp;
-QueueHandle_t xMotor;
+QueueHandle_t xLeftMotor;
+QueueHandle_t xRightMotor;
+
+mpu6050 sensor(i2c0, 0, 1);
+Motor left_motor(300, 15);
+Motor right_motor(300, 14);
+
+mpu_params mpu;
+motor_params left_motor_params;
+motor_params right_motor_params;
+PIDParams_t pid_params;
 
 int main() {
-    stdio_init_all();
 
     //cria o Mailbox pra cada sensor
     xMailbox = xQueueCreate(1, sizeof(MpuMailbox_t));
     xMessageEsp = xQueueCreate(10, sizeof(Message));
-    xMotor = xQueueCreate(10, sizeof(int));
-
-    //inicializa o i2c, aqui não to utilizando a superclass do i2c ainda não
-    i2c_inst_t *i2c_port = i2c0;
-    //cria uma instancia do mpu
-    mpu6050 sensor(i2c_port, 0, 1);
-    //cria os parametros das task que envolvam o mpu
-    //sendo que os parametros atuais são uma instancia da class mpu6050
-    //e o outro é o mailbox do mpu
-    mpu_params mpu;
-    mpu.sensor = &sensor;
-    mpu.mailbox = xMailbox;
+    xLeftMotor = xQueueCreate(10, sizeof(int));
+    xRightMotor = xQueueCreate(10, sizeof(int));
 
     char buffer[0xffff];
 
-    Motor left_motor(300, 15);
-
-    motor_params left_motor_params;
-    left_motor_params.motor = &left_motor;
-    left_motor_params.mailbox = xMotor;
+    vInitializeStructParams();
+    vInitializeMotors();
 
     //cria as tarefas de ler o sensor e adicionar o dado no mailbox
     // e a outra de ler do mailbox pra testar se ta ok a comunicação entre as tasks
     xTaskCreate(vTaskReadMpu, "Task MPU read", 256, &mpu, 2, NULL); // Tarefa 1 com prioridade 1
     xTaskCreate(vTaskPrintMpu, "Task MPU print", 256, &mpu, 2, NULL); // Tarefa 2 com prioridade 1
-    xTaskCreate(vUartTask, "Task UART", 1000, xMessageEsp, 1, NULL);
-    xTaskCreate(vProcessTask, "Task Process", 1000, xMessageEsp, 1, NULL);
+    // xTaskCreate(vUartTask, "Task UART", 1000, xMessageEsp, 1, NULL);
+    // xTaskCreate(vProcessTask, "Task Process", 1000, xMessageEsp, 1, NULL);
     //xTaskCreate(vTaskReceiveSerialData, "Task UART receive", 256, NULL, 1, NULL);
     //xTaskCreate(vTaskSendSerialData, "Task UART send", 256, NULL, 1, NULL);
     xTaskCreate(vSystemLogTask,"Task Log", 256, buffer, 1, NULL);
-    xTaskCreate(vTaskMotorControl, "Left Motor Task", 1000, &left_motor_params, 2, NULL);
-    xTaskCreate(potentiometerTask, "Potentiometer Task", 1000, xMotor, 2, NULL);
+    xTaskCreate(vTaskMotorControl, "Left Motor Task", 1000, &left_motor_params, 1, NULL);
+    xTaskCreate(vTaskMotorControl, "Right Motor Task", 1000, &right_motor_params, 1, NULL);
+    // xTaskCreate(potentiometerTask, "Potentiometer Task", 1000, xMotor, 2, NULL);
+    xTaskCreate(vPIDParametersTask, "PID Task", 1000, &pid_params, 3, NULL);
 
     //escalona as tarefas
     vTaskStartScheduler();
@@ -106,4 +105,41 @@ void vSystemLogTask(void *pvParameters) {
         // Delay para o próximo log
         vTaskDelay(logInterval);
     }
+}
+
+void vInitializeMotors() {
+    stdio_init_all();
+    sensor.mpu6050_init();
+
+    left_motor.vInitMotors();
+    right_motor.vInitMotors();
+
+    printf("Inincializando, colocando 30%% para começar\n");
+    left_motor.setSpeed(30);
+    right_motor.setSpeed(30);
+
+    sleep_ms(3000);
+    printf("Começou, colocando 40%% como vel padrão\n");
+    left_motor.setSpeed(40);
+    right_motor.setSpeed(40);
+    sleep_ms(1000);
+    printf("acabei a função de init \n");
+}
+
+void vInitializeStructParams() {
+    vQueueAddToRegistry(xLeftMotor, "Left Motor");
+    vQueueAddToRegistry(xRightMotor, "Right Motor");
+
+    mpu.sensor = &sensor;
+    mpu.mailbox = xMailbox;
+
+    left_motor_params.motor = &left_motor;
+    left_motor_params.mailbox = xLeftMotor;
+
+    right_motor_params.motor = &right_motor;
+    right_motor_params.mailbox = xRightMotor;
+
+    pid_params.leftMotorQueue = xLeftMotor;
+    pid_params.rightMotorQueue = xRightMotor;
+    pid_params.mpuMailbox = xMailbox;
 }

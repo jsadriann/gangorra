@@ -27,6 +27,7 @@ add_executable(main
     drivers/motor.cpp
     handlers/motor_handler.cpp
     handlers/control_handler.cpp
+    drivers/kalman_filter.cpp
 )
 
 # Adiciona os diretórios de include

@@ -23,6 +23,7 @@ typedef struct {
 typedef struct xMailboxManager{
     TickType_t xTimeStamp;
     MpuData_h mpu;
+    float angle;
 }MpuMailbox_t;
 
 typedef struct task_params {
@@ -34,5 +35,11 @@ typedef struct motor_task_params {
     Motor* motor;
     QueueHandle_t mailbox;
 }motor_params;
+
+typedef struct pid_task_paramas {
+    QueueHandle_t mpuMailbox;
+    QueueHandle_t leftMotorQueue;
+    QueueHandle_t rightMotorQueue;
+}PIDParams_t;
 
 #endif // DATASTRUCTURE_H
