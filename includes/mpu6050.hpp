@@ -66,6 +66,12 @@ typedef struct {
     int16_t accel_z;
 }accel;
 
+inline void _delay_ms(int ms){
+    for (volatile int i = 0; i < ms * 800; i++) {
+        __asm__("nop");
+    }
+}
+
 class mpu6050 : public i2c_sensors
 {
 private:
@@ -94,7 +100,6 @@ public:
     mpu6050(i2c_inst *i2c_port,uint16_t sda,uint16_t scl):
       i2c_sensors(i2c_port, sda, scl, 400000){}
 
-    inline void _delay_ms(int ms) const;;
 
     /*
      *

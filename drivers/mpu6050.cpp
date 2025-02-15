@@ -1,10 +1,5 @@
 #include "mpu6050.hpp"
 
-inline void mpu6050::_delay_ms(int ms) const {
-    for (volatile int i = 0; i < ms * 800; i++) {
-        __asm__("nop");
-    }
-}
 
 void mpu6050::mpu6050_reset() const {
     uint8_t reset[] = {REG_PWR_MGMT_1, 0x80};

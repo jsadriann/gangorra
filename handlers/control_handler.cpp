@@ -1,5 +1,9 @@
 #include "control_handler.h"
 
+float kp=3.55;
+float ki=0.005;
+float kd=2.05;
+
 void potentiometerTask(void *pvParameters) {
 	adc_init();
 	adc_gpio_init(26);

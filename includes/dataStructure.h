@@ -9,6 +9,7 @@
 #include "task.h"
 #include "queue.h"
 #include "mpu6050.hpp"
+#define MESSAGE_MAX_LENGTH 256
 
 typedef struct {
     accel accelData;
@@ -35,6 +36,11 @@ typedef struct motor_task_params {
     Motor* motor;
     QueueHandle_t mailbox;
 }motor_params;
+
+typedef struct processMessageEsp_params {
+    QueueHandle_t receive;
+    QueueHandle_t send;
+}PMEParams_t;
 
 typedef struct pid_task_paramas {
     QueueHandle_t mpuMailbox;

@@ -17,17 +17,16 @@ pico_sdk_init()
 # Adiciona o executável principal
 add_executable(main
     src/main.cpp     
-    src/message.cpp          # Código principal
     drivers/i2c_sensors.cpp
     drivers/tof.cpp
     handlers/tof_handler.cpp
     drivers/mpu6050.cpp        # Implementação do driver do sensor
     handlers/mpu6050_handler.cpp # Implementação das tarefas relacionadas aos sensores
-    handlers/serial.cpp
     drivers/motor.cpp
     handlers/motor_handler.cpp
     handlers/control_handler.cpp
     drivers/kalman_filter.cpp
+    handlers/serial.cpp
 )
 
 # Adiciona os diretórios de include
@@ -56,9 +55,9 @@ pico_enable_stdio_usb(main 1)
 # Gera arquivos extras (UF2, bin, map, etc.)
 pico_add_extra_outputs(main)
 
-add_custom_command(TARGET main POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-        main.uf2
-        /media/$ENV{USER}/RPI-RP2/
-        COMMENT "Copiando motorProject.uf2 para a Raspberry Pi Pico"
-)
+# add_custom_command(TARGET main POST_BUILD
+#         COMMAND ${CMAKE_COMMAND} -E copy
+#         main.uf2
+#         /media/$ENV{USER}/RPI-RP2/
+#         COMMENT "Copiando motorProject.uf2 para a Raspberry Pi Pico"
+# )
