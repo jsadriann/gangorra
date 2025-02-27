@@ -30,5 +30,6 @@ void vTaskSendMessage(void *pvParameters);
 void vTaskReceive(void *pvParameters);
 void vTaskGenerateMessage(void *pvParameters);
 void vTaskProcessMessageEsp(void *pvParameters);
+void vTaskGenerateFormattedMessage(void *pvParameters);
 
 #endif // SERIAL_H

@@ -24,12 +24,12 @@ void vTaskReadMpu(void *pvParameters) {
     while (1) {
         // Envia uma mensagem para a mailbox
         if (xQueueOverwrite(mailbox, &mailboxData) == pdPASS) {
-            printf("Producer: MPU Send\n");
+            //printf("Leitura do MPU: %d\n",mailboxData.xTimeStamp);
         } else {
-            printf("Producer: Falha ao enviar para a mailbox\n");
+            //printf("Producer: Falha ao enviar para a mailbox\n");
         }
         // Aguarda 1 segundo antes de enviar a próxima mensagem
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(50));
         sensor->getAccel(&mailboxData.mpu.accelData);
         sensor->getGyro(&mailboxData.mpu.gyroData);
         mailboxData.xTimeStamp = xTaskGetTickCount();
@@ -52,15 +52,15 @@ void vTaskPrintMpu(void *pvParameters) {
     while (1) {
         // Lê o valor da mailbox (aguarda indefinidamente até receber)
         if (xQueueReceive(mailbox, &receivedMessage, portMAX_DELAY) == pdPASS) {
-            printf("Dados do MPU6050\n");
-            sensor->print_raw_data(receivedMessage.mpu.accelData, receivedMessage.mpu.gyroData);
+            //printf("Dados do MPU6050\n");
+            //sensor->print_raw_data(receivedMessage.mpu.accelData, receivedMessage.mpu.gyroData);
             printf("Filtered Angle: %.2f\n", receivedMessage.angle);
-            printf("TimeStamp: %d\n\n", receivedMessage.xTimeStamp);
+            //printf("TimeStamp: %d\n\n", receivedMessage.xTimeStamp);
         } else {
             printf("Consumer: Falha ao receber da mailbox\n");
         }
 
         // Aguarda 500 ms antes de tentar novamente
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        vTaskDelay(pdMS_TO_TICKS(50));
     }
 }

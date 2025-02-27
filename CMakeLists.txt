@@ -50,7 +50,8 @@ target_link_libraries(main
     FreeRTOS-Kernel-Heap4     # Gerenciador de heap do FreeRTOS
 )
 
-pico_enable_stdio_usb(main 1)
+pico_enable_stdio_usb(main 0)
+pico_enable_stdio_uart(main 1)
 
 # Gera arquivos extras (UF2, bin, map, etc.)
 pico_add_extra_outputs(main)

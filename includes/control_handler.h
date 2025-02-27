@@ -9,12 +9,12 @@
 #include "dataStructure.h"
 #include "hardware/adc.h"
 
-#define MIN_DUTY 30   // Duty cycle mínimo em porcentagem
-#define MAX_DUTY 60    // Duty cycle máximo em porcentagem
+// #define MIN_DUTY 30   // Duty cycle mínimo em porcentagem
+// #define MAX_DUTY 60    // Duty cycle máximo em porcentagem
 
 
-#define throttle 1300
-#define desired_angle 0
+// #define throttle 1300
+// #define desired_angle 0
 
 void potentiometerTask(void *pvParameters);
 void vPIDParametersTask(void *pvParameters);

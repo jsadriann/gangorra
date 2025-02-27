@@ -48,4 +48,14 @@ typedef struct pid_task_paramas {
     QueueHandle_t rightMotorQueue;
 }PIDParams_t;
 
+typedef struct {
+    QueueHandle_t xMailbox;
+    QueueHandle_t xLeftMotor;
+    QueueHandle_t xRightMotor;
+    QueueHandle_t xSendEsp;
+    char* print;
+    mpu6050* mpu;
+} SystemQueues_t;
+
 #endif // DATASTRUCTURE_H
+

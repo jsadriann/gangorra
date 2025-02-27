@@ -101,9 +101,9 @@ void mpu6050::print_raw_data(accel accelData, gyro gyroData) const {
     gyro_dps[2] = gyroData.gyro_z / GYRO_SCALE_FACTOR;
 
     // Print converted values
-    printf("aX = %.2f g | aY = %.2f g | aZ = %.2f g \n", accel_g[0], accel_g[1], accel_g[2]);
+    printf("aX = %.6f g | aY = %.6f g | aZ = %.6f g \n", accel_g[0], accel_g[1], accel_g[2]);
 
-    printf("gX = %.2f dps | gY = %.2f dps | gZ = %.2f dps | \n", gyro_dps[0], gyro_dps[1], gyro_dps[2]);
+    printf("gX = %.6f dps | gY = %.6f dps | gZ = %.6f dps | \n", gyro_dps[0], gyro_dps[1], gyro_dps[2]);
 }
 
 void mpu6050::toString(char *buffer, size_t buffer_size, accel accelData, gyro gyroData) const {

@@ -5,10 +5,12 @@ void vTaskMotorControl(void *pvParameters) {
 	QueueHandle_t mailbox = motor->mailbox;
 	Motor* sensor = motor->motor;
 
+	printf("Motor control task started\n");
+
 	int dutyCycle;
 	while (true) {
 		if (xQueueReceive(mailbox, &dutyCycle, portMAX_DELAY) == pdPASS) {
-			printf("%s velocity adjusted in %d%%\n", pcQueueGetName(motor->mailbox), dutyCycle);
+			//printf("%s velocity adjusted in %d%%\n", pcQueueGetName(motor->mailbox), dutyCycle);
 			sensor->setSpeed(dutyCycle);
 		}else {
 			printf("It was not possible to obtain data from Queue, maintaining the speed");

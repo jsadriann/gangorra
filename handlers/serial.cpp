@@ -7,10 +7,10 @@
 #include <cstdio>   // Para printf
 #include <cstring>
 #include "dataStructure.h"
-extern float kp, ki, kd;
+float kp, ki, kd;
 float akp, aki, akd;
-extern float tof_r, tof_l, accel_x, accel_y, accel_z, angle, current;
-extern float current_tof_r, current_tof_l, current_accel_x, current_accel_y, current_accel_z, current_angle, current_current;
+float tof_r, tof_l, accel_x, accel_y, accel_z, angle, current;
+float current_tof_r, current_tof_l, current_accel_x, current_accel_y, current_accel_z, current_angle, current_current;
 #define UART_ID uart1
 #define UART_TX_PIN 4  // GPIO 4 → TX
 #define UART_RX_PIN 5  // GPIO 5 → RX
@@ -58,7 +58,7 @@ void vTaskReceive(void *pvParameters) {
                 if (message_index < MESSAGE_MAX_LENGTH - 1) {
                     received_message[message_index++] = c;
                 }
-                //printf("%c\n", c);
+                printf("%c\n", c);
 
                 if (c == '/') {
                     received_message[message_index] = '\0';
@@ -102,66 +102,67 @@ void vTaskProcessMessageEsp(void *pvParameters) {
     while (true) {
         if (xQueueReceive(xReceiveEsp, &receivedMessage, portMAX_DELAY) == pdPASS) {
             // Verifica se a mensagem está bem formada
-            if (receivedMessage[0] != '#' || receivedMessage[strlen(receivedMessage) - 1] != '/') {
-                printf("Mensagem inválida!\n");
+            if (receivedMessage[2] != '#' || receivedMessage[strlen(receivedMessage)-1] != '/') {
+                printf("Mensagem inválida! %c %c\n", receivedMessage[strlen(receivedMessage)-1],receivedMessage[2]);
                 continue;
-            }
+            }else{
 
-            // Remover o caractere '#' e '/' do início e fim
-            char *start = receivedMessage + 1;  // Pula o '#'
-            char *end = strchr(start, '/');  
-            if (end) *end = '\0';  // Substitui '/' por fim de string
+                // Remover o caractere '#' e '/' do início e fim
+                char *start = receivedMessage + 3;  // Pula o '#'
+                char *end = strchr(start, '/');  
+                if (end) *end = '\0';  // Substitui '/' por fim de string
 
-            // Separar o comando
-            char *command = strtok(start, "$");
-            if (!command) {
-                printf("Erro ao extrair comando\n");
-                continue;
-            }
-
-            // Separar o tipo
-            char *type = strtok(NULL, "@");
-            if (!type) {
-                printf("Erro ao extrair type\n");
-                continue;
-            }
-
-            // Separar os parâmetros
-            char *parameters = strtok(NULL, ":");
-            if (!parameters) {
-                printf("Erro ao extrair parâmetros\n");
-                continue;
-            }
-
-            // Extrair valores numéricos dos parâmetros
-            if (sscanf(parameters, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f",&akp, &aki, &akd, &tof_r, &tof_l, &accel_x, &accel_y, &accel_z, &angle, &current) != 7) {
-                printf("Erro ao converter parâmetros\n");
-                continue;
-            }
-
-            // Exibir os valores extraídos
-            printf("Comando: %s\n", command);
-            printf("Tipo: %s\n", type);
-            printf("akp: %.2f, aki: %.2f, akd: %.2f,tof_r: %.2f, tof_l: %.2f, accel_x: %.2f, accel_y: %.2f, accel_z: %.2f, angle: %.2f, current: %.2f\n",
-                   akp,aki,akd,tof_r, tof_l, accel_x, accel_y, accel_z, angle, current);
-            if (strcmp(type, "0") == 0){
-                char rMessage[MESSAGE_MAX_LENGTH];
-                switch ((int)command)
-                {
-                case '0':
-                    // Criar o pacote diretamente na variável received_message
-                    snprintf(rMessage, MESSAGE_MAX_LENGTH, "#send$Response@ :%f,%f,%f,%f,%f,%f,%f,%f,%f,%f:/", 
-                            kp, ki, kd, tof_r, tof_l, accel_x, accel_y, accel_z, angle, current);
-                    break;
-                default:
-                    break;
+                // Separar o comando
+                char *command = strtok(start, "$");
+                if (!command) {
+                    printf("Erro ao extrair comando\n");
+                    continue;
                 }
-                if (!(strlen(rMessage) == 0)) {
-                    // Envia a resposta
-                    if (xQueueSend(xSendEsp, &rMessage, portMAX_DELAY) == pdPASS) {
-                        printf("Mensagem enviada para a ESP32: %s\n", rMessage);
+
+                // Separar o tipo
+                char *type = strtok(NULL, "@");
+                if (!type) {
+                    printf("Erro ao extrair type\n");
+                    continue;
+                }
+
+                // Separar os parâmetros
+                char *parameters = strtok(NULL, ":");
+                if (!parameters) {
+                    printf("Erro ao extrair parâmetros\n");
+                    continue;
+                }
+
+                // Extrair valores numéricos dos parâmetros
+                if (sscanf(parameters, "%f,%f,%f,%f",&akp, &aki, &akd,&angle) != 4) {
+                    printf("Erro ao converter parâmetros\n");
+                    continue;
+                }
+
+                // Exibir os valores extraídos
+                printf("Comando: %s\n", command);
+                printf("Tipo: %s\n", type);
+                printf("akp: %.2f, aki: %.2f, akd: %.2f, angle: %.2f\n",
+                    akp,aki,akd,angle);
+                if (strcmp(type, "0") == 0){
+                    char rMessage[MESSAGE_MAX_LENGTH];
+                    switch ((int)command)
+                    {
+                    case '0':
+                        // Criar o pacote diretamente na variável received_message
+                        snprintf(rMessage, MESSAGE_MAX_LENGTH, "#send$Response@ :%f,%f,%f,%f:/", 
+                                kp, ki, kd, angle);
+                        break;
+                    default:
+                        break;
                     }
-                    
+                    if (!(strlen(rMessage) == 0)) {
+                        // Envia a resposta
+                        if (xQueueSend(xSendEsp, &rMessage, portMAX_DELAY) == pdPASS) {
+                            printf("Mensagem enviada para a ESP32: %s\n", rMessage);
+                        }
+                        
+                    }
                 }
             }
         }
@@ -194,7 +195,7 @@ void vTaskGenerateMessage(void *pvParameters) {
 
     while (true) {
         // Exemplo de mensagem no formato especificado
-        snprintf(message, MESSAGE_MAX_LENGTH, "#0$0@:1.0,1.0,1.0,1.4,2.5,3.0,3.1,30,24,20:/");
+        snprintf(message, MESSAGE_MAX_LENGTH, "#A$0@:1.0,1.0,1.0,1.4,2.5,3.0,3.1,30,24,20:/");
         
         // Enviar para a fila
         if (xQueueSend(xSendEsp, &message, portMAX_DELAY) == pdPASS) {
@@ -204,6 +205,48 @@ void vTaskGenerateMessage(void *pvParameters) {
         }
         
         vTaskDelay(pdMS_TO_TICKS(5000));  // Aguarda 5 segundos antes de enviar novamente
+    }
+}
+
+void vTaskGenerateFormattedMessage(void *pvParameters) {
+    SystemQueues_t *queues = (SystemQueues_t *)pvParameters;
+    QueueHandle_t xMailbox = queues->xMailbox;
+    QueueHandle_t xSendEsp = queues->xSendEsp;
+
+    char message[MESSAGE_MAX_LENGTH];
+    MpuMailbox_t mailboxData;
+
+    while (true) {
+        // Tenta ler dados da fila xMailbox
+        if (xQueueReceive(xMailbox, &mailboxData, portMAX_DELAY) == pdPASS) {
+            float prog = 1.0;          // Valor arbitrário
+            float k_integracao = 1.0; // Valor arbitrário
+            float k_derivacao = 1.0;  // Valor arbitrário
+            float tof_left = 1.4;     // Valor arbitrário
+            float tof_right = 2.5;    // Valor arbitrário
+            float accel_x = mailboxData.mpu.accelData.accel_x;
+            float accel_y = mailboxData.mpu.accelData.accel_y;
+            float accel_z = mailboxData.mpu.accelData.accel_z;
+            float angulo = mailboxData.angle;
+            int corrente = 30;        // Valor arbitrário
+
+            // Monta a mensagem no formato especificado
+            snprintf(message, MESSAGE_MAX_LENGTH,
+                     "#A$0@:%0.1f,%0.1f,%0.1f,%0.1f,%0.1f,%0.1f,%0.1f,%0.1f,%0.1f,%d:/",
+                     prog, k_integracao, k_derivacao, tof_left, tof_right,
+                     accel_x, accel_y, accel_z, angulo, corrente);
+
+            // Envia a mensagem para a fila xSendEsp
+            if (xQueueSend(xSendEsp, &message, portMAX_DELAY) == pdPASS) {
+                printf("Mensagem gerada e enviada para xSendEsp: %s\\n", message);
+            } else {
+                printf("Falha ao enviar mensagem para a fila xSendEsp!\\n");
+            }
+        } else {
+            printf("Falha ao receber dados da fila xMailbox!\\n");
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(5000));  // Aguarda 5 segundos antes de gerar nova mensagem
     }
 }
 
