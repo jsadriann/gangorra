@@ -1,7 +1,8 @@
 #ifndef TOF_HANDLER_HPP
 #define TOF_HANDLER_HPP
 
-#include <stdio.h>
+#include <cstdio>
+#include <cmath>
 #include "pico/stdlib.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -25,5 +26,7 @@ extern QueueHandle_t xVLMailbox;
 void TaskVLUpdate(void *pvParameters);
 void TaskUpdate(void *pvParameters);
 void TaskRead(void *pvParameters);
+void TaskCalculateAngle(void *pvParameters);
+float calculate_seesaw_angle(uint16_t d1, uint16_t d2, uint16_t length_mm);
 
 #endif // TOF_HANDLER_HPP

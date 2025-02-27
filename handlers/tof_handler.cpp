@@ -77,4 +77,29 @@ void TaskRead(void *pvParameters)
         }
     }
 }
+
+void TaskCalculateAngle(void *pvParameters)
+{
+    tof10120_data_t tof_reading;
+    vl53l0x_data_t vl_reading;
+
+    while (true)
+    {
+        if (xQueueReceive(xTOFMailbox, &tof_reading, portMAX_DELAY) == pdPASS &&
+            xQueueReceive(xVLMailbox, &vl_reading, portMAX_DELAY) == pdPASS)
+        {
+            float angle = calculate_seesaw_angle(tof_reading.distance, vl_reading.distance, 440);
+            printf("Timestamp: %u, Seesaw Angle: %.2f degrees\n", 
+                   tof_reading.xTimeStamp, angle);
+        }
+    }
+}
+
+float calculate_seesaw_angle(uint16_t d1, uint16_t d2, uint16_t length_mm)
+{
+    float delta_h = fabs((float)d1 - (float)d2);
+    float theta_radians = atan(delta_h / length_mm);
+    float theta_degrees = theta_radians * (180.0 / M_PI);
+    return theta_degrees;
+}
 // End of file

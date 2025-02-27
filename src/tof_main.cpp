@@ -51,6 +51,7 @@ int main()
 
     // Create the ToF consumer task
     xTaskCreate(TaskRead, "Retrieve data", 1024, NULL, 1, NULL);
+    xTaskCreate(TaskCalculateAngle, "AngleCalc", 1024, NULL, 2, NULL);
 
     // Start the scheduler
     vTaskStartScheduler();
