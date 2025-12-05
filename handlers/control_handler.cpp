@@ -97,10 +97,13 @@
 
 
 // Declaração dos ganhos do PID - Ajuste conforme necessário
-const float desired_angle =-12.0;
-const float kp = 0.5;   // Ganho Proporcional
+float desired_angle =0.0, current_angle= 0.0;
+int duty_l = 0, duty_r = 0;
+const float kp = 0.65;   // Ganho Proporcional
 const float ki = 0.006;  // Ganho Integral
-const float kd =170;   // Ganho Derivativo
+const float kd = 160;   // Ganho Derivativo
+float accel_x=0, accel_y=0,accel_z=0;
+
 
 void vPIDParametersTask(void *pvParameters) {
     PIDParams_t* params = static_cast<PIDParams_t *>(pvParameters);
@@ -109,10 +112,10 @@ void vPIDParametersTask(void *pvParameters) {
     float previous_error = 0, error = 0;
     float pid_p = 0, pid_i = 0, pid_d = 0;
 
-    const float pid_i_max = 6.0;  // Limite seguro para o termo I
-    const float pid_i_min = -6.0;
-    const float pid_d_max = 16;  // Limite para o termo D
-    const float pid_d_min = -16;
+    const float pid_i_max = 17.0;  
+    const float pid_i_min = -15.0;
+    const float pid_d_max = 20;
+    const float pid_d_min = -13;
 
     MpuMailbox_t mailbox;
 
@@ -121,7 +124,9 @@ void vPIDParametersTask(void *pvParameters) {
             printf("Erro ao receber dados do MPU\n");
             continue;
         }
-
+        accel_x= static_cast<float>(mailbox.mpu.accelData.accel_x) / (float)8192.0;
+        accel_y= static_cast<float>(mailbox.mpu.accelData.accel_y) / (float)8192.0;
+        accel_z= static_cast<float>(mailbox.mpu.accelData.accel_z) / (float)8192.0;
         time = mailbox.xTimeStamp;
         elapsedTime = time - timePrev;
 		timePrev = time;
@@ -129,10 +134,11 @@ void vPIDParametersTask(void *pvParameters) {
         // if (elapsedTime <= 0) elapsedTime = 0.01f;  // Evita divisão por zero
 
         // Inverte o sinal do ângulo imediatamente ao receber
-        mailbox.angle = -mailbox.angle;
+		current_angle = mailbox.angle;
+        //mailbox.angle = -mailbox.angle;
 
         // Calcula o erro normalmente
-        error = desired_angle - mailbox.angle;
+        error = desired_angle - current_angle;
 		if((error <= 0.8) && (error >= (-0.8))) error = 0.0;
 
         // Termos do PID
@@ -152,11 +158,11 @@ void vPIDParametersTask(void *pvParameters) {
 
         // Soma do PID - limitado ao intervalo [-16, 16]
         float PID = pid_p + pid_i + pid_d;
-        if (PID > 15) PID = 15;
-        if (PID < -13) PID = -13;
+        if (PID > 25) PID = 25;
+        if (PID < -20) PID = -20;
 
         // O duty cycle do motor esquerdo varia de 16% a 48% (centro = 32%)
-        const int dutyNeutral = 32;
+        const int dutyNeutral = 39;
         const int dutyLeft = dutyNeutral + static_cast<int>(PID);
         const int dutyRight = 44;  // Motor direito fixo
 
@@ -164,13 +170,16 @@ void vPIDParametersTask(void *pvParameters) {
         int dutyLeft_clamped = dutyLeft;
         if (dutyLeft_clamped > 100) dutyLeft_clamped = 100;
         if (dutyLeft_clamped < 0) dutyLeft_clamped = 0;
+        duty_l = dutyLeft_clamped;
+        duty_r = dutyRight;
 
         // Envia comandos para os motores
         if(xQueueSend(params->leftMotorQueue, &dutyLeft_clamped, portMAX_DELAY) == pdPASS &&
            xQueueSend(params->rightMotorQueue, &dutyRight, portMAX_DELAY) == pdPASS) {
-			//printf("P: %.2f, I: %.2f, D: %.2f, Angle: %.2f ERROR: %.2f time: %d\n", pid_p, pid_i, pid_d, mailbox.angle, error,time);
-            //printf("Motores atualizados: Left = %d%% (PID: %.2f), Right = %d%%\n", 
-                    //dutyLeft_clamped, PID, dutyRight);
+			// printf("P: %.2f, I: %.2f, D: %.2f, Angle: %.2f ERROR: %.2f time: %d\n", pid_p, pid_i, pid_d, mailbox.angle, error,time);
+            // printf("Motores atualizados: Left = %d%% (PID: %.2f), Right = %d%%\n", 
+            //         dutyLeft_clamped, PID, dutyRight);
+			// printf("angulo desejado: %.2f\n",desired_angle);
         } else {
             printf("Falha ao enviar dados para os motores\n");
         }

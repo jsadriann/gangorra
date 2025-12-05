@@ -89,6 +89,20 @@ void Motor::vInitMotors() {
 	pwm_set_enabled(this->slice_num, true);
 }
 
+// void Motor::setSpeed(const uint speed) const {
+// 	const float duty_min = 4.5f;  // Duty mínimo detectado (em %)
+// 	const float duty_max = 7.1f; // Duty máximo detectado (em %)
+
+// 	// Normalização para que speed (0-100) corresponda ao intervalo real (5.1% - 14.4%)
+// 	float duty_cycle = ((speed / 100.0f) * (duty_max - duty_min)) + duty_min;
+
+// 	// Converte para um valor inteiro válido para pwm_set_chan_level
+// 	uint16_t duty_level = static_cast<uint16_t>((this->wrap * duty_cycle) / 100.0f + 0.5f);
+
+// 	// Define o nível PWM com valor inteiro
+// 	pwm_set_chan_level(this->slice_num, this->pwm_channel, duty_level);
+// }
+
 void Motor::setSpeed(const uint speed) const {
 	const float duty_min = 4.5f;  // Duty mínimo detectado (em %)
 	const float duty_max = 7.1f; // Duty máximo detectado (em %)

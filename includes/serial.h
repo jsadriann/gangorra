@@ -24,6 +24,7 @@ void setup_uart();
 
 // Tarefa para exibir mensagens recebidas
 void vTaskDisplayMessage(void *pvParameters);
+void vTaskPrepareMessageToSendEsp(void *pvParameters);
 
 void vTaskSendMessage(void *pvParameters);
 

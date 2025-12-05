@@ -23,7 +23,7 @@ using namespace std;
 #define WHO_AM_I_REG                   0x75
 //IMPORTANT! Some clone mpu have the address of i2c different of the default value 0x68 and 0x69
 //so, identify the correct value and alter this macro
-#define WHO_AM_I_VALUE                  0x68
+#define WHO_AM_I_VALUE                  0x72
 
 #define REG_ACCEL_XOUT_H                0x3B
 #define	REG_ACCEL_YOUT_H	               0x3D

@@ -8,12 +8,15 @@
 #include <cstring>
 #include "dataStructure.h"
 float kp, ki, kd;
-float akp, aki, akd;
-float tof_r, tof_l, accel_x, accel_y, accel_z, angle, current;
-float current_tof_r, current_tof_l, current_accel_x, current_accel_y, current_accel_z, current_angle, current_current;
+float akp=0.0, aki=0.0, akd=0.0;
+extern float tof_r, tof_l, accel_x, accel_y, accel_z, current;
+extern int duty_l , duty_r;
+float angle;
+extern float desired_angle, current_angle;
+float current_tof_r, current_tof_l, current_accel_x, current_accel_y, current_accel_z, current_current;
 #define UART_ID uart1
-#define UART_TX_PIN 4  // GPIO 4 → TX
-#define UART_RX_PIN 5  // GPIO 5 → RX
+#define UART_TX_PIN 4  // GPIO 4, pin 6 → TX
+#define UART_RX_PIN 5  // GPIO 5, pint 7 → RX
 
 #define BAUD_RATE 115200
 #define MESSAGE_MAX_LENGTH 256
@@ -75,7 +78,7 @@ void vTaskReceive(void *pvParameters) {
             // }
             xSemaphoreGive(xUartMutex);
         }
-        vTaskDelay(pdMS_TO_TICKS(50));
+        vTaskDelay(pdMS_TO_TICKS(1));
     }
 }
 
@@ -102,9 +105,11 @@ void vTaskProcessMessageEsp(void *pvParameters) {
     while (true) {
         if (xQueueReceive(xReceiveEsp, &receivedMessage, portMAX_DELAY) == pdPASS) {
             // Verifica se a mensagem está bem formada
-            if (receivedMessage[2] != '#' || receivedMessage[strlen(receivedMessage)-1] != '/') {
-                printf("Mensagem inválida! %c %c\n", receivedMessage[strlen(receivedMessage)-1],receivedMessage[2]);
+            if (receivedMessage[2] != '#' ) {
+                printf("Mensagem inválida! %c\n",receivedMessage[2]);
                 continue;
+            }else if(receivedMessage[strlen(receivedMessage)-1] != '/'){
+                 printf("Mensagem inválida! %c",receivedMessage[strlen(receivedMessage)-1]);
             }else{
 
                 // Remover o caractere '#' e '/' do início e fim
@@ -140,34 +145,43 @@ void vTaskProcessMessageEsp(void *pvParameters) {
                 }
 
                 // Exibir os valores extraídos
-                printf("Comando: %s\n", command);
-                printf("Tipo: %s\n", type);
-                printf("akp: %.2f, aki: %.2f, akd: %.2f, angle: %.2f\n",
-                    akp,aki,akd,angle);
-                if (strcmp(type, "0") == 0){
-                    char rMessage[MESSAGE_MAX_LENGTH];
-                    switch ((int)command)
-                    {
-                    case '0':
-                        // Criar o pacote diretamente na variável received_message
-                        snprintf(rMessage, MESSAGE_MAX_LENGTH, "#send$Response@ :%f,%f,%f,%f:/", 
-                                kp, ki, kd, angle);
-                        break;
-                    default:
-                        break;
-                    }
-                    if (!(strlen(rMessage) == 0)) {
-                        // Envia a resposta
-                        if (xQueueSend(xSendEsp, &rMessage, portMAX_DELAY) == pdPASS) {
-                            printf("Mensagem enviada para a ESP32: %s\n", rMessage);
-                        }
-                        
-                    }
+                // printf("Comando: %s\n", command);
+                // printf("Tipo: %s\n", type);
+                // printf("akp: %.2f, aki: %.2f, akd: %.2f, angle: %.2f\n",
+                //     akp,aki,akd,angle);
+                
+                desired_angle = angle;
+                snprintf(receivedMessage, MESSAGE_MAX_LENGTH, "#1$1@:%.2f,%.2f,%.2f,%.2f:/", akp, aki, akd, angle);
+                if (xQueueOverwrite(xSendEsp, &receivedMessage) == pdPASS) {
+                    printf("Mensagem enviada para xSendEsp: %s\n", receivedMessage);
+                } else {
+                    printf("Erro ao enviar mensagem para xSendEsp\n");
                 }
             }
         }
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
+
+void vTaskPrepareMessageToSendEsp(void *pvParameters) {
+    QueueHandle_t xSendEsp = (QueueHandle_t)pvParameters;
+    char receivedMessage[MESSAGE_MAX_LENGTH];
+
+    while (true) {
+        // Formatar a mensagem no padrão especificado
+        snprintf(receivedMessage, MESSAGE_MAX_LENGTH, "#1$1@:%.2f,%.2f,%.2f,%d,%d,%.2f,%.2f,%.2f,%.2f,%.2f:/", akp, aki, akd,duty_r,duty_l,accel_x,accel_y,accel_z, current_angle,1.0);
+
+        // Enviar para a fila xSendEsp
+        if (xQueueOverwrite(xSendEsp, &receivedMessage) == pdPASS) {
+            printf("Mensagem enviada para xSendEsp: %s\n", receivedMessage);
+        } else {
+            printf("Erro ao enviar mensagem para xSendEsp\n");
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(700)); // Aguarda 5 segundos antes de enviar novamente
+    }
+}
+
 
 // Tarefa para enviar mensagem pela a ESP32
 void vTaskSendMessage(void *pvParameters) {
@@ -180,12 +194,12 @@ void vTaskSendMessage(void *pvParameters) {
                     uart_putc(UART_ID, mes[i]);  // Envia um caractere por vez
                     xSemaphoreGive(xUartMutex);    // Libera o UART após cada caractere
                 }
-                vTaskDelay(pdMS_TO_TICKS(50));  // Pequeno delay para evitar congestionamento
+                vTaskDelay(pdMS_TO_TICKS(1));  // Pequeno delay para evitar congestionamento
             }
             
-            printf("Mensagem enviada para a ESP32 depois de quebrar o pacote: %s\n", mes);  // Aguarda 5 segundos antes de enviar novamente
+            //printf("Mensagem enviada para a ESP32 depois de quebrar o pacote: %s\n", mes);  // Aguarda 5 segundos antes de enviar novamente
         }
-        vTaskDelay(pdMS_TO_TICKS(5000));
+        //vTaskDelay(pdMS_TO_TICKS(00));
     }
 }
 
@@ -199,7 +213,7 @@ void vTaskGenerateMessage(void *pvParameters) {
         
         // Enviar para a fila
         if (xQueueSend(xSendEsp, &message, portMAX_DELAY) == pdPASS) {
-            printf("Mensagem gerada e enviada para a fila xSendEsp: %s\n", message);
+            //printf("Mensagem gerada e enviada para a fila xSendEsp: %s\n", message);
         } else {
             printf("Falha ao enviar mensagem para a fila!\n");
         }

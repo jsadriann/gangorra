@@ -4,13 +4,13 @@
 void mpu6050::mpu6050_reset() const {
     uint8_t reset[] = {REG_PWR_MGMT_1, 0x80};
     i2c_write_blocking(i2c_port, MPU6050_ADDR, reset, 2, false);
-    _delay_ms(2000);
+    _delay_ms(3000);
     
 
 
     uint8_t wake[] = {REG_PWR_MGMT_1, 0x00};
     i2c_write_blocking(i2c_port, MPU6050_ADDR, wake, 2, false);
-    _delay_ms(200);
+    _delay_ms(1000);
     //vTaskDelay(pdMS_TO_TICKS(200)); 
 }
 
@@ -19,17 +19,17 @@ void mpu6050::mpu6050_sensors_configure() const {
     uint8_t sample_rate[] = {REG_SMPLRT_DIV, SAMPLE_RATE_DIV};
     i2c_write_blocking(i2c_port, MPU6050_ADDR, sample_rate, 2, false);
     //vTaskDelay(pdMS_TO_TICKS(200)); 
-    _delay_ms(200);
+    _delay_ms(1000);
 
     uint8_t accel_config[] = {REG_ACCEL_CONFIG, ACCEL_CONFIG_VALUE};
     i2c_write_blocking(i2c_port, MPU6050_ADDR, accel_config, 2, false);
     //vTaskDelay(pdMS_TO_TICKS(200)); 
-    _delay_ms(200);
+    _delay_ms(1000);
     // Set gyroscope range
     uint8_t gyro_config[] = {REG_GYRO_CONFIG, GYRO_CONFIG_VALUE};
     i2c_write_blocking(i2c_port, MPU6050_ADDR, gyro_config, 2, false);
     //vTaskDelay(pdMS_TO_TICKS(200)); 
-    _delay_ms(200);
+    _delay_ms(1000);
 }
 
 void mpu6050::mpu6050_init() const {
@@ -43,12 +43,12 @@ void mpu6050::mpu6050_init() const {
     uint8_t reg = WHO_AM_I_REG;
 
     i2c_write_blocking(i2c_port, MPU6050_ADDR, &reg, 1, true);
-    _delay_ms(200);
+    _delay_ms(1000);
     i2c_read_blocking(i2c_port, MPU6050_ADDR, &who_am_i, 1, false);
-    _delay_ms(200);
+    _delay_ms(1000);
 
     printf("MPU6050 WHO_AM_I: 0x%02X\n", who_am_i);
-    _delay_ms(200);
+    _delay_ms(1000);
 
     if (who_am_i != WHO_AM_I_VALUE) {
         printf("MPU6050 not found!\n");

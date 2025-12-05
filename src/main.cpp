@@ -202,7 +202,7 @@ int main() {
     xMailbox = xQueueCreate(1, sizeof(MpuMailbox_t));
     xLeftMotor = xQueueCreate(10, sizeof(int));
     xRightMotor = xQueueCreate(10, sizeof(int));
-    xSendEsp = xQueueCreate(5, sizeof(char[MESSAGE_MAX_LENGTH]));
+    xSendEsp = xQueueCreate(1, sizeof(char[MESSAGE_MAX_LENGTH]));
     xReceiveEsp = xQueueCreate(5, sizeof(char[MESSAGE_MAX_LENGTH]));
     PMEParams_t pmeParams;
     pmeParams.receive = xReceiveEsp;
@@ -230,25 +230,26 @@ int main() {
     char buffer[0xffff];
     systemQueues.print = buffer;
 
-    // vInitializeStructParams();
-    // vInitializeMotors();
+     vInitializeStructParams();
+     vInitializeMotors();
     
 
     //cria as tarefas de ler o sensor e adicionar o dado no mailbox
     //xTaskCreate(vTaskProcessMessageEsp,"menssage process", 1000, &pmeParams, 2, NULL);
     // e a outra de ler do mailbox pra testar se ta ok a comunicação entre as tasks
-    //xTaskCreate(vTaskReadMpu, "Task MPU read", 256, &mpu, 2, NULL); // Tarefa 1 com prioridade 1
+    xTaskCreate(vTaskReadMpu, "Task MPU read", 256, &mpu, 2, NULL); // Tarefa 1 com prioridade 1
     //xTaskCreate(vTaskPrintMpu, "Task MPU print", 256, &mpu, 2, NULL); // Tarefa 2 com prioridade 1
-    //xTaskCreate(vTaskProcessMessageEsp,"menssage print", 1000, &pmeParams, 2, NULL);
-    xTaskCreate(vTaskDisplayMessage,"menssage print", 1000, xReceiveEsp, 2, NULL);
-    //xTaskCreate(vTaskSendMessage,"menssage envio", 1000, xSendEsp, 2, NULL);
+    xTaskCreate(vTaskProcessMessageEsp,"menssage print", 1000, &pmeParams, 2, NULL);
+    //xTaskCreate(vTaskDisplayMessage,"menssage print", 1000, xReceiveEsp, 2, NULL);
+    xTaskCreate(vTaskSendMessage,"menssage envio", 1000, xSendEsp, 2, NULL);
+    xTaskCreate(vTaskPrepareMessageToSendEsp,"preparo envio", 1000, xSendEsp, 2, NULL);
     xTaskCreate(vTaskReceive,"menssage receive", 1000, xReceiveEsp, 2, NULL);
     //xTaskCreate(vTaskGenerateMessage,"envio esp", 1000, xSendEsp, 2, NULL);
     //xTaskCreate(vSystemLogTask,"Task Log", 10000, &systemQueues, 5, NULL);
-    //xTaskCreate(vTaskMotorControl, "Left Motor Task", 1000, &left_motor_params, 1, NULL);
-    //xTaskCreate(vTaskMotorControl, "Right Motor Task", 1000, &right_motor_params, 1, NULL);
+    xTaskCreate(vTaskMotorControl, "Left Motor Task", 1000, &left_motor_params, 1, NULL);
+    xTaskCreate(vTaskMotorControl, "Right Motor Task", 1000, &right_motor_params, 1, NULL);
     //xTaskCreate(potentiometerTask, "Potentiometer Task", 1000, xLeftMotor, 2, NULL);
-    //xTaskCreate(vPIDParametersTask, "PID Task", 256, &pid_params, 1, NULL);
+    xTaskCreate(vPIDParametersTask, "PID Task", 256, &pid_params, 1, NULL);
     //xTaskCreate(vTaskGenerateFormattedMessage,"GenerateMsgTask",2000,&systemQueues,1,NULL);     
 
     //escalona as tarefas
@@ -302,7 +303,7 @@ void vSystemLogTask(void *pvParameters) {
         int dutyCycle2 = 0;
         if (xQueueReceive(param->xRightMotor, &dutyCycle, portMAX_DELAY) == pdPASS && xQueueReceive(param->xLeftMotor, &dutyCycle2, portMAX_DELAY) == pdPASS) {
             printf("|                   MOTOR DIREITO                         \n");
-            printf("|POTENCIA: 44%%      SetDutyCycle(4.1)\n");
+            printf("|POTENCIA: 44%%      SetDutyCycle(5.7)\n");
             printf("|                   MOTOR ESQUERDO                        \n");
             printf("|POTENCIA: %d%%      SetDutyCycle(%.2f)\n",dutyCycle2,(4.6+(0.025*dutyCycle2)));
         }
@@ -322,8 +323,8 @@ void vInitializeMotors() {
     _delay_ms(9000);
     //sleep_ms(3000);
     //printf("Começou, colocando 40%% como vel padrão\n");
-    // left_motor.setSpeed(60);
-    // right_motor.setSpeed(80);
+    left_motor.setSpeed(0);
+    right_motor.setSpeed(0);
     //sleep_ms(1000);
     _delay_ms(2000);
     //printf("acabei a função de init \n");
